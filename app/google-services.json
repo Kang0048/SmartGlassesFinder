@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "314259063403",
+    "project_id": "smartglassesfinder",
+    "storage_bucket": "smartglassesfinder.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:314259063403:android:3374178b0188ea9c03a72e",
+        "android_client_info": {
+          "package_name": "com.example.finditproject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSq6l3b5nWUsMFtRlRIuEXPpNoa6euNtk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
