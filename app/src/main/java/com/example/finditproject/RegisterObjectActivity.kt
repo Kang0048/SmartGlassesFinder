@@ -10,11 +10,17 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -42,6 +48,7 @@ class RegisterObjectActivity : ComponentActivity() {
 
     private val imageUriState = mutableStateOf<Uri?>(null)
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -49,38 +56,127 @@ class RegisterObjectActivity : ComponentActivity() {
 
         setContent {
             FindITProjectTheme {
+                // 홈과 동일한 네이비 그라데이션 & 글래스 카드
+                val bg = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF0A0E27),
+                        Color(0xFF0F2247),
+                        Color(0xFF0C2E5A)
+                    )
+                )
+                val cardColor = Color.White.copy(alpha = 0.08f)
+                val borderColor = Color.White.copy(alpha = 0.22f)
+
                 var objectName by remember { mutableStateOf("") }
                 val context = LocalContext.current
 
-                Surface(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedTextField(
-                            value = objectName,
-                            onValueChange = { objectName = it },
-                            label = { Text("물품 이름") },
-                            modifier = Modifier.fillMaxWidth()
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = { Text("물건 등록", color = Color.White) },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = Color.Transparent
+                            )
                         )
-
-                        Button(onClick = { takePicture() }) {
-                            Text("사진 촬영")
-                        }
-
-                        imageUriState.value?.let { uri ->
-                            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
-                            Image(bitmap = bitmap.asImageBitmap(), contentDescription = null, modifier = Modifier.height(200.dp))
-                        }
-
-                        Button(
-                            onClick = {
-                                if (objectName.isBlank() || imageUriState.value == null) {
-                                    Toast.makeText(context, "이름과 사진을 입력해주세요", Toast.LENGTH_SHORT).show()
-                                    return@Button
-                                }
-                                uploadToFirebase(objectName, imageUriState.value!!)
-                            },
+                    },
+                    containerColor = Color.Transparent
+                ) { inner ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(bg)
+                            .padding(inner)
+                            .padding(16.dp)
+                    ) {
+                        Surface(
+                            color = cardColor,
+                            border = BorderStroke(1.dp, borderColor),
+                            shape = RoundedCornerShape(20.dp),
+                            tonalElevation = 0.dp,
+                            shadowElevation = 2.dp,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("등록하기")
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(14.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            ) {
+                                Text(
+                                    text = "내 물건 정보를 등록하세요",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.White
+                                )
+
+                                OutlinedTextField(
+                                    value = objectName,
+                                    onValueChange = { objectName = it },
+                                    label = { Text("물품 이름", color = Color.White.copy(alpha = 0.8f)) },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White.copy(alpha = 0.06f),
+                                        unfocusedContainerColor = Color.White.copy(alpha = 0.04f),
+                                        disabledContainerColor = Color.White.copy(alpha = 0.04f),
+                                        focusedIndicatorColor = Color.White.copy(alpha = 0.45f),
+                                        unfocusedIndicatorColor = Color.White.copy(alpha = 0.25f),
+                                        cursorColor = Color.White,
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White
+                                    )
+                                )
+
+                                // 사진 촬영 버튼 (글래스 버튼)
+                                Button(
+                                    onClick = { takePicture() },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.White.copy(alpha = 0.12f),
+                                        contentColor = Color.White
+                                    ),
+                                    border = BorderStroke(1.dp, borderColor),
+                                    shape = RoundedCornerShape(14.dp),
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                                ) {
+                                    Text("사진 촬영")
+                                }
+
+                                // 미리보기
+                                imageUriState.value?.let { uri ->
+                                    val bitmap = remember(uri) {
+                                        @Suppress("DEPRECATION")
+                                        MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                                    }
+                                    Image(
+                                        bitmap = bitmap.asImageBitmap(),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(200.dp)
+                                            .clip(RoundedCornerShape(14.dp))
+                                    )
+                                }
+
+                                // 등록 버튼 (가득 폭, 글래스 버튼)
+                                Button(
+                                    onClick = {
+                                        if (objectName.isBlank() || imageUriState.value == null) {
+                                            Toast.makeText(context, "이름과 사진을 입력해주세요", Toast.LENGTH_SHORT).show()
+                                            return@Button
+                                        }
+                                        uploadToFirebase(objectName, imageUriState.value!!)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.White.copy(alpha = 0.12f),
+                                        contentColor = Color.White
+                                    ),
+                                    border = BorderStroke(1.dp, borderColor),
+                                    shape = RoundedCornerShape(14.dp),
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                                ) {
+                                    Text("등록하기")
+                                }
+                            }
                         }
                     }
                 }
