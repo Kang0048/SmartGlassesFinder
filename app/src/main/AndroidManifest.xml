@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- ✅ 카메라 하드웨어 옵션 -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
@@ -49,5 +50,15 @@
         <activity android:name=".HomeActivity" />
         <activity android:name=".RegisterObjectActivity" />
         <activity android:name=".ViewObjectsActivity" />
+
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
+
+
 </manifest>

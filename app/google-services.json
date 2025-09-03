@@ -12,7 +12,20 @@
           "package_name": "com.example.finditproject"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "314259063403-a3c0sok01amaee3bo6bpn4rf79bd1fhr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.finditproject",
+            "certificate_hash": "05914ae0da7812144b773878f9aff22ebdc30172"
+          }
+        },
+        {
+          "client_id": "314259063403-j3m7cunflajggsn1fd2oh6917ofmbtk3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCSq6l3b5nWUsMFtRlRIuEXPpNoa6euNtk"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "314259063403-j3m7cunflajggsn1fd2oh6917ofmbtk3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
