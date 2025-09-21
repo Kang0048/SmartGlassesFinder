@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
@@ -41,6 +42,9 @@ class HomeActivity : ComponentActivity() {
                         },
                         onViewClick = {
                             startActivity(Intent(this, ViewObjectsActivity::class.java))
+                        },
+                        onViewListClick = {
+                            startActivity(Intent(this, ViewObjectsListActivity::class.java))
                         }
                     )
                 }
@@ -52,7 +56,8 @@ class HomeActivity : ComponentActivity() {
 @Composable
 fun HomeScreen(
     onRegisterClick: () -> Unit = {},
-    onViewClick: () -> Unit = {}
+    onViewClick: () -> Unit = {},
+    onViewListClick :() -> Unit = {},
 ) {
     // 스마트 안경 분위기의 네온+글래스 느낌 그라데이션 배경
     val bg = Brush.linearGradient(
@@ -114,7 +119,15 @@ fun HomeScreen(
                     accent = Color.White.copy(alpha = 0.08f), //
                     onClick = onRegisterClick
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
+                ActionGlassCard(
+                    title = "물건 목록",
+                    subtitle = "등록한 모든 물건 확인",
+                    icon = Icons.Filled.MenuBook, // 책 느낌 아이콘
+                    accent = Color.White.copy(alpha = 0.08f),
+                    onClick = onViewListClick
+                )
+                Spacer(Modifier.height(20.dp))
                 ActionGlassCard(
                     title = "물건 찾기",
                     subtitle = "감지된 사진을 확인",
@@ -122,6 +135,7 @@ fun HomeScreen(
                     accent = Color.White.copy(alpha = 0.08f), // 카드와 동일
                     onClick = onViewClick
                 )
+
             }
         }
 
@@ -203,7 +217,7 @@ fun ActionGlassCard(
             AssistChip(
                 onClick = onClick,
                 label = {
-                    Text("시작", color = Color.White)
+                    Text("클릭", color = Color.White)
                 },
                 colors = AssistChipDefaults.assistChipColors(
                     containerColor = Color.White.copy(alpha = 0.12f),

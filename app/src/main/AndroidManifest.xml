@@ -50,7 +50,7 @@
         <activity android:name=".HomeActivity" />
         <activity android:name=".RegisterObjectActivity" />
         <activity android:name=".ViewObjectsActivity" />
-
+        <activity android:name=".ViewObjectsListActivity"/>
         <service
             android:name=".MyFirebaseMessagingService"
             android:exported="false">

@@ -72,7 +72,8 @@ fun DetectedMatchesScreen() {
         error = null
         try {
             val result = rootRef.listAll().await()
-            val list = result.prefixes.map { prefixRef ->
+            val list = result.prefixes.filter{it.name.lowercase() != "objects"}
+                .map { prefixRef ->
                 DetectedFolder(name = prefixRef.name, ref = prefixRef)
             }.sortedBy { it.name.lowercase() }
             folders = list

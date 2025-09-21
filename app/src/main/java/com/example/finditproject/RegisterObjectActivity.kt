@@ -14,9 +14,14 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -37,12 +42,16 @@ class RegisterObjectActivity : ComponentActivity() {
 
     private lateinit var photoFile: File
     private lateinit var photoUri: Uri
+    private val imageUriList = mutableStateListOf<Uri>()
 
     private val takePictureLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            imageUriState.value = photoUri
+            photoUri?.let { uri ->
+                // 찍은 사진을 리스트에 추가
+                imageUriList.add(uri)
+            }
         }
     }
 
@@ -141,29 +150,54 @@ class RegisterObjectActivity : ComponentActivity() {
                                 }
 
                                 // 미리보기
-                                imageUriState.value?.let { uri ->
-                                    val bitmap = remember(uri) {
-                                        @Suppress("DEPRECATION")
-                                        MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                                LazyRow(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    items(imageUriList) { uri ->
+                                        Box{
+                                            val bitmap = remember(uri) {
+                                                @Suppress("DEPRECATION")
+                                                MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                                            }
+                                            Image(
+                                                bitmap = bitmap.asImageBitmap(),
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .size(200.dp)
+                                                    .clip(RoundedCornerShape(14.dp))
+                                            )
+                                            IconButton(
+                                                onClick = { imageUriList.remove(uri) },
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd) // 이미지 오른쪽 상단
+                                                    .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(50))
+                                                    .size(24.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Close,
+                                                    contentDescription = "삭제",
+                                                    tint = Color.White
+                                                )
+                                            }
+                                        }
+
+
+
                                     }
-                                    Image(
-                                        bitmap = bitmap.asImageBitmap(),
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(200.dp)
-                                            .clip(RoundedCornerShape(14.dp))
-                                    )
                                 }
+
 
                                 // 등록 버튼 (가득 폭, 글래스 버튼)
                                 Button(
                                     onClick = {
-                                        if (objectName.isBlank() || imageUriState.value == null) {
+                                        if (objectName.isBlank() || imageUriList.isEmpty()) {
                                             Toast.makeText(context, "이름과 사진을 입력해주세요", Toast.LENGTH_SHORT).show()
                                             return@Button
                                         }
-                                        uploadToFirebase(objectName, imageUriState.value!!)
+                                        uploadToFirebase(objectName)
                                     },
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.buttonColors(
@@ -204,35 +238,40 @@ class RegisterObjectActivity : ComponentActivity() {
         takePictureLauncher.launch(intent)
     }
 
-    private fun uploadToFirebase(name: String, uri: Uri) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+    private fun uploadToFirebase(name: String) {
+        if (imageUriList.isEmpty()) return
         val timestamp = System.currentTimeMillis()
-        val fileRef = FirebaseStorage.getInstance().reference
-            .child("objects/$uid/$timestamp.jpg")
 
-        val inputStream = contentResolver.openInputStream(uri) ?: return
-        val uploadTask = fileRef.putStream(inputStream)
+        imageUriList.forEach { uri ->
+            val fileRef = FirebaseStorage.getInstance().reference
+                .child("objects/$name/$timestamp.jpg") // 물건 이름 기준 폴더
 
-        uploadTask.addOnSuccessListener {
-            fileRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                val metadata = hashMapOf(
-                    "userId" to uid,
-                    "name" to name,
-                    "timestamp" to timestamp,
-                    "imageUrl" to downloadUri.toString()
-                )
-                FirebaseFirestore.getInstance().collection("detected_objects")
-                    .add(metadata)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "물건 등록 완료!", Toast.LENGTH_SHORT).show()
-                        finish()
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(this, "Firestore 저장 실패", Toast.LENGTH_SHORT).show()
-                    }
+            val inputStream = contentResolver.openInputStream(uri) ?: return@forEach
+            val uploadTask = fileRef.putStream(inputStream)
+
+            uploadTask.addOnSuccessListener {
+                fileRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                    val metadata = hashMapOf(
+                        "name" to name,
+                        "timestamp" to timestamp,
+                        "imageUrl" to downloadUri.toString()
+                    )
+                    FirebaseFirestore.getInstance().collection("detected_objects")
+                        .add(metadata)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "물건 등록 완료!", Toast.LENGTH_SHORT).show()
+                            // 업로드 완료 후 리스트 초기화
+                            imageUriList.clear()
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "Firestore 저장 실패", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }.addOnFailureListener {
+                Toast.makeText(this, "이미지 업로드 실패", Toast.LENGTH_SHORT).show()
             }
-        }.addOnFailureListener {
-            Toast.makeText(this, "이미지 업로드 실패", Toast.LENGTH_SHORT).show()
         }
     }
+
 }
